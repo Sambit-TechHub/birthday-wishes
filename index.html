@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Birthday Surprise ❤️</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Georgia,serif;
+  background:linear-gradient(135deg,#ffe0ed,#ffc0d9,#fff0f5);
+  color:#7c1748;
+  text-align:center;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+header{padding:25px 12px}
+h1{font-size:clamp(30px,7vw,48px);margin:12px 0}
+p{line-height:1.7}
+.card{
+  background:#ffffffdf;
+  max-width:650px;
+  width:92%;
+  margin:18px auto;
+  padding:24px 18px;
+  border-radius:25px;
+  box-shadow:0 8px 30px #c64b7930;
+}
+input,textarea,select{
+  width:100%;padding:13px;margin:8px 0;
+  border:1px solid #f1a5c4;border-radius:12px;
+  font-size:16px;background:white;
+}
+button{
+  border:0;border-radius:25px;padding:13px 20px;
+  margin:7px;background:#e84d8a;color:white;
+  font-size:16px;cursor:pointer;
+}
+button:hover{background:#bc2868;transform:scale(1.03)}
+.secondary{background:#a45b83}
+.hidden{display:none!important}
+.cakes{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.cake{
+  background:#fff0f6;color:#8e2859;
+  border:2px solid transparent;font-size:17px;
+}
+.cake.selected{border-color:#e84d8a;background:#ffd4e6}
+#cakeArt{font-size:90px;margin:15px}
+.balloon-area{display:flex;justify-content:center;gap:15px;flex-wrap:wrap}
+.balloon{
+  font-size:49px;background:transparent;padding:5px;
+  animation:float 2s ease-in-out infinite;
+}
+@keyframes float{
+  50%{transform:translateY(-12px)}
+}
+.gallery{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.gallery img{
+  width:42%;max-width:220px;aspect-ratio:1;
+  object-fit:cover;border-radius:15px;
+}
+.letter{
+  background:#fff7e9;padding:22px;border-radius:18px;
+  white-space:pre-wrap;text-align:left;line-height:1.9;
+}
+.heart{
+  position:fixed;bottom:-30px;pointer-events:none;
+  animation:rise 5s linear forwards;z-index:10;
+}
+@keyframes rise{
+  to{transform:translateY(-110vh) rotate(30deg);opacity:0}
+}
+footer{padding:25px;font-size:13px}
+</style>
+</head>
+
+<body>
+<header>
+  <div style="font-size:45px">🎀 💗 🎂 💗 🎀</div>
+  <h1>A Birthday Made With Love</h1>
+  <p>A little surprise, made just for you ✨</p>
+</header>
+
+<section class="card" id="setup">
+  <h2>💌 Who is the birthday star?</h2>
+  <input id="herName" placeholder="Her name">
+  <input id="myName" placeholder="Your name">
+  <input id="age" type="number" placeholder="Age (optional)">
+  <button onclick="begin()">Let's Begin 💖</button>
+</section>
+
+<section class="card hidden" id="cakeSection">
+  <h2 id="cakeTitle">Choose your birthday cake 🎂</h2>
+  <div class="cakes">
+    <button class="cake selected" onclick="chooseCake('🎂',this)">
+      🍫 Chocolate
+    </button>
+    <button class="cake" onclick="chooseCake('🍰',this)">
+      🍓 Strawberry
+    </button>
+    <button class="cake" onclick="chooseCake('🧁',this)">
+      🍦 Vanilla
+    </button>
+  </div>
+  <div id="cakeArt">🎂</div>
+  <button onclick="next('balloonSection')">Continue 💗</button>
+</section>
+
+<section class="card hidden" id="balloonSection">
+  <h2>Pop your love balloons 🎈</h2>
+  <p>Tap every balloon to discover a sweet message!</p>
+  <div class="balloon-area" id="balloons"></div>
+  <p id="balloonMessage">Your surprise is waiting inside 💕</p>
+  <button onclick="next('gallerySection')">See Our Memories 📸</button>
+</section>
+
+<section class="card hidden" id="gallerySection">
+  <h2>Our Little Memory Lane 📸</h2>
+  <p>Choose photos from your phone to add your memories.</p>
+  <input type="file" id="photoInput" accept="image/*" multiple>
+  <div class="gallery" id="gallery"></div>
+  <button onclick="next('letterSection')">Continue 💌</button>
+</section>
+
+<section class="card hidden" id="letterSection">
+  <h2>One Letter, From My Heart 💌</h2>
+  <textarea id="letterText" rows="7"
+    maxlength="500"
+    placeholder="Write your birthday letter here..."></textarea>
+  <p id="letterCount">0 / 500</p>
+  <button class="secondary" onclick="letterIdea()">Need an idea? ✨</button>
+  <button onclick="showFinal()">Open Your Surprise 🎁</button>
+</section>
+
+<section class="card hidden" id="finalSection">
+  <div style="font-size:65px">💖🎉💖</div>
+  <h1 id="finalTitle">Happy Birthday!</h1>
+  <p id="finalSubtitle"></p>
+  <div id="finalCake" style="font-size:80px">🎂</div>
+  <button onclick="makeWish()">Make a Wish 🕯️</button>
+  <p id="wishMessage"></p>
+  <h2>💌 Your Birthday Letter</h2>
+  <div class="letter" id="finalLetter"></div>
+  <p>Made with all my love ❤️</p>
+  <button onclick="shareWhatsApp()">Send Your Surprise 💚</button>
+  <button class="secondary" onclick="restart()">Replay Surprise ↻</button>
+</section>
+
+<footer>Made with 💗 for someone special</footer>
+
+<script>
+let her = "";
+let me = "";
+let cake = "🎂";
+let popped = 0;
+
+const messages = [
+  "Your smile makes my day brighter ❤️",
+  "You make ordinary moments special 🌸",
+  "You deserve all the happiness in the world 💖",
+  "You are my favourite person 🥰",
+  "May all your dreams come true ✨"
+];
+
+function begin(){
+  her = document.getElementById("herName").value.trim();
+  me = document.getElementById("myName").value.trim();
+
+  if(!her || !me){
+    alert("Please enter both names 💗");
+    return;
+  }
+
+  document.getElementById("setup").classList.add("hidden");
+  document.getElementById("cakeSection").classList.remove("hidden");
+  document.getElementById("cakeTitle").textContent =
+    "Choose a cake for " + her + " 🎂";
+
+  document.getElementById("balloons").innerHTML = "";
+
+  messages.forEach((message,i)=>{
+    const b = document.createElement("button");
+    b.className = "balloon";
+    b.textContent = "🎈";
+    b.setAttribute("aria-label","Pop balloon " + (i+1));
+
+    b.onclick = ()=>{
+      if(b.dataset.popped) return;
+      b.dataset.popped = "yes";
+      b.textContent = "💗";
+      popped++;
+      document.getElementById("balloonMessage").textContent = message;
+      hearts();
+    };
+
+    document.getElementById("balloons").appendChild(b);
+  });
+}
+
+function chooseCake(emoji,button){
+  cake = emoji;
+  document.getElementById("cakeArt").textContent = emoji;
+  document.querySelectorAll(".cake").forEach(b=>
+    b.classList.remove("selected")
+  );
+  button.classList.add("selected");
+}
+
+function next(id){
+  document.querySelectorAll(".card").forEach(s=>
+    s.classList.add("hidden")
+  );
+  document.getElementById(id).classList.remove("hidden");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+document.getElementById("photoInput").addEventListener("change",e=>{
+  const gallery = document.getElementById("gallery");
+  gallery.innerHTML = "";
+
+  [...e.target.files].slice(0,5).forEach(file=>{
+    if(!file.type.startsWith("image/")) return;
+    if(file.size > 5*1024*1024){
+      alert(file.name + " is larger than 5 MB");
+      return;
+    }
+
+    const img = document.createElement("img");
+    img.alt = "Birthday memory";
+    img.src = URL.createObjectURL(file);
+    gallery.appendChild(img);
+  });
+});
+
+document.getElementById("letterText").addEventListener("input",e=>{
+  document.getElementById("letterCount").textContent =
+    e.target.value.length + " / 500";
+});
+
+function letterIdea(){
+  document.getElementById("letterText").value =
+    "Happy Birthday, my love! ❤️\n\n" +
+    "You make my world brighter in so many little ways. " +
+    "I hope your new year brings you smiles, beautiful memories, " +
+    "and everything your heart wishes for.\n\n" +
+    "Thank you for being you. You deserve the sweetest birthday ever! 💗\n\n" +
+    "Forever cheering for you,\n" + me;
+
+  document.getElementById("letterCount").textContent =
+    document.getElementById("letterText").value.length + " / 500";
+}
+
+function showFinal(){
+  document.getElementById("finalTitle").textContent =
+    "Happy Birthday, " + her + "! 🎂";
+
+  document.getElementById("finalSubtitle").textContent =
+    "A little surprise made with love by " + me + ".";
+
+  document.getElementById("finalCake").textContent = cake;
+
+  document.getElementById("finalLetter").textContent =
+    document.getElementById("letterText").value ||
+    "Wishing you endless happiness, love and beautiful memories. ❤️";
+
+  next("finalSection");
+  hearts();
+}
+
+function makeWish(){
+  document.getElementById("wishMessage").textContent =
+    "Close your eyes, make a wish, and let your dreams bloom! ✨💗";
+  hearts();
+}
+
+function hearts(){
+  for(let i=0;i<12;i++){
+    const h = document.createElement("span");
+    h.className = "heart";
+    h.textContent = ["💗","💕","💖","✨"][Math.floor(Math.random()*4)];
+    h.style.left = Math.random()*100 + "vw";
+    h.style.fontSize = (18+Math.random()*22) + "px";
+    document.body.appendChild(h);
+    setTimeout(()=>h.remove(),5000);
+  }
+}
+
+function shareWhatsApp(){
+  const text = "Happy Birthday, " + her +
+    "! 🎂💗 I made a little surprise for you. Love, " + me + ".";
+  window.open(
+    "https://wa.me/?text=" + encodeURIComponent(text),
+    "_blank"
+  );
+}
+
+function restart(){
+  location.reload();
+}
+</script>
+</body>
+</html>
